@@ -7,17 +7,20 @@ import threading
 import random
 import time
 
+import postgres_test
+
 local_thread_data = threading.local()
 
 
 def make_connection():
     if not hasattr(local_thread_data, 'conn'):
-        local_thread_data.conn = psycopg2.connect(
-                host="localhost",
-                database="AdvDB",
-                user="postgres",
-                password="RITPostGreSQL"
-            )
+        # local_thread_data.conn = psycopg2.connect(
+        #         host="localhost",
+        #         database="AdvDB",
+        #         user="postgres",
+        #         password="RITPostGreSQL"
+        #     )
+        local_thread_data.conn = postgres_test.create_connection()
     return local_thread_data.conn
 
 
@@ -25,7 +28,7 @@ def CreateAccount(username, password, firstName, lastName):
     successful_count = 0
     conn = make_connection()
     cur = conn.cursor()
-    insert_query = 'insert into public.users (username, password, first_name, last_name) values (%s, %s, %s, %s)'
+    insert_query = 'insert into users (username, password, first_name, last_name) values (%s, %s, %s, %s)'
     try:
         cur.execute(insert_query, (username, password, firstName, lastName))
         conn.commit()
@@ -40,13 +43,13 @@ def SubmitOrder(date, username, password, listOfProductsAndQuantities):
     conn = make_connection()
     cur = conn.cursor()
     successful_count = 0
-    check_cred = 'select * from public.users where username = %s and password = %s'
+    check_cred = 'select * from users where username = %s and password = %s'
     cur.execute(check_cred, (username, password))
     result = cur.fetchall()
     try:
         if result:
             str_of_product_values = ', '.join(["({0}, {1})".format(values[0], values[1]) for values in listOfProductsAndQuantities])
-            check_items_availability = 'select p1.* from public.products p1 ' \
+            check_items_availability = 'select p1.* from products p1 ' \
                                           'join ( ' \
                                           'select * from ( values {0} ) as z (product_id, quantity) ' \
                                           ') as p2 ' \
@@ -55,18 +58,18 @@ def SubmitOrder(date, username, password, listOfProductsAndQuantities):
 
             cur.execute(check_items_availability)
             if cur.rowcount == total_products:
-                update_query = 'update public.products p1 set quantity = p1.quantity - p2.quantity ' \
+                update_query = 'update products p1 set quantity = p1.quantity - p2.quantity ' \
                                'from (select * from ( values {0} ) as z (product_id, quantity) ' \
                                ') as p2 where p1.id = p2.product_id ' \
                                'and p1.quantity >= p2.quantity'.format(str_of_product_values)
                 cur.execute(update_query)
 
-                insert_query_orders = 'insert into public.orders ("user", date) values (%s, %s) returning id'
+                insert_query_orders = 'insert into orders ("user", date) values (%s, %s) returning id'
                 cur.execute(insert_query_orders, (username, date.today()))
                 order_id = cur.fetchone()[0]
 
                 str_of_product_values_with_ids = ', '.join(["({2}, {0}, {1})".format(values[0], values[1], order_id) for values in listOfProductsAndQuantities])
-                insert_query_items = 'insert into public.items (order_id, product_id, product_quantity) values {0}'.format(str_of_product_values_with_ids)
+                insert_query_items = 'insert into items (order_id, product_id, product_quantity) values {0}'.format(str_of_product_values_with_ids)
                 cur.execute(insert_query_items)
                 conn.commit()
                 successful_count = 1
@@ -79,11 +82,11 @@ def PostReview(username, password, productID, rating, reviewText):
     successful_count = 0
     conn = make_connection()
     cur = conn.cursor()
-    check_cred = 'select * from public.users where username = %s and password = %s'
+    check_cred = 'select * from users where username = %s and password = %s'
     cur.execute(check_cred, (username, password))
     result = cur.fetchall()
     if result:
-        insert_query = 'insert into public.reviews (reviews_description, reviews_rating, date, "user", product_id) values' \
+        insert_query = 'insert into reviews (reviews_description, reviews_rating, date, "user", product_id) values' \
                        '(%s, %s, %s, %s, %s)'
         try:
             cur.execute(insert_query, (reviewText, rating, date.today(), username, productID))
@@ -98,7 +101,7 @@ def AddProduct(name, description, price, initialStock):
     successful_count = 0
     conn = make_connection()
     cur = conn.cursor()
-    insert_query = 'insert into public.products (name, description, price, quantity) values (%s, %s, %s, %s)'
+    insert_query = 'insert into products (name, description, price, quantity) values (%s, %s, %s, %s)'
     try:
         cur.execute(insert_query, (name, description, price, initialStock))
         conn.commit()
@@ -112,7 +115,7 @@ def UpdateStockLevel(productID, itemCountToAdd):
     successful_count = 0
     conn = make_connection()
     cur = conn.cursor()
-    update_query = 'update public.products set quantity = quantity + %s where id = %s'
+    update_query = 'update products set quantity = quantity + %s where id = %s'
     try:
         cur.execute(update_query, (itemCountToAdd, productID))
         rows = cur.rowcount
@@ -131,8 +134,8 @@ def GetProductAndReviews(productID):
     rows = None
     conn = make_connection()
     cur = conn.cursor()
-    select_query = 'select p.*, r."user", r.reviews_rating, r.reviews_description from public.products p ' \
-                   'inner join public.reviews r ' \
+    select_query = 'select p.*, r."user", r.reviews_rating, r.reviews_description from products p ' \
+                   'inner join reviews r ' \
                    'on p.id = r.product_id ' \
                    'where r.product_id = %s'
     try:
@@ -148,7 +151,7 @@ def GetAverageUserRating(username):
     avg_rating = None
     conn = make_connection()
     cur = conn.cursor()
-    select_query = 'select sum(reviews_rating), count("user") from public.reviews ' \
+    select_query = 'select sum(reviews_rating), count("user") from reviews ' \
                    'where "user" = %s ' \
                    'group by "user"'
     try:
@@ -193,7 +196,7 @@ def run_test(start_time, results):
             password = "password"
             conn = make_connection()
             cur = conn.cursor()
-            cur.execute('select id from public.products')
+            cur.execute('select id from products')
             result = cur.fetchall()
             product_id_list = [row[0] for row in result]
             product_id = random.choice(product_id_list)
@@ -204,7 +207,7 @@ def run_test(start_time, results):
         elif operation == 'UpdateStockLevel':
             conn = make_connection()
             cur = conn.cursor()
-            cur.execute('select id from public.products')
+            cur.execute('select id from products')
             result = cur.fetchall()
             product_id_list = [row[0] for row in result]
             product_id = random.choice(product_id_list)
@@ -213,7 +216,7 @@ def run_test(start_time, results):
         elif operation == 'GetProductAndReviews':
             conn = make_connection()
             cur = conn.cursor()
-            cur.execute('select id from public.products')
+            cur.execute('select id from products')
             result = cur.fetchall()
             product_id_list = [row[0] for row in result]
             product_id = random.choice(product_id_list)
@@ -230,7 +233,7 @@ def run_test(start_time, results):
             password = 'password'
             conn = make_connection()
             cur = conn.cursor()
-            cur.execute('select id from public.products')
+            cur.execute('select id from products')
             result = cur.fetchall()
             product_id_list = [row[0] for row in result]
             listOfProductsAndQuantities = [(random.choice(product_id_list), random.randint(1, 5)) for i in range(10)]
@@ -256,14 +259,15 @@ def main(n_o_t):
 
     total_successful_count = sum(results)
 
-    conn = psycopg2.connect(
-                host="localhost",
-                database="AdvDB",
-                user="postgres",
-                password="RITPostGreSQL"
-            )
+    conn = postgres_test.create_connection()
+    # conn = psycopg2.connect(
+    #             host="localhost",
+    #             database="AdvDB",
+    #             user="postgres",
+    #             password="RITPostGreSQL"
+    #         )
     cur = conn.cursor()
-    cur.execute('select sum(public.products.quantity)/count(public.products.quantity) as A from public.products '
+    cur.execute('select sum(products.quantity)/count(products.quantity) as A from products '
                 'where quantity < 0')
     rows = cur.fetchone()
     print("Number of threads used:", num_of_threads)

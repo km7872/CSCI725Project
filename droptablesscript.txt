@@ -1,0 +1,6 @@
+drop table items;
+drop table orders;
+drop table reviews;
+drop table products;
+drop table users;
+commit;

@@ -1,4 +1,4 @@
-drop table if exists products;
+--drop table if exists products;
 
 create table if not exists products
 (
@@ -16,7 +16,7 @@ create table if not exists products
 --alter table products
     --owner to postgres;
 
-drop table if exists users;
+--drop table if exists users;
 create table if not exists users
 (
     username   text not null
@@ -30,7 +30,7 @@ create table if not exists users
 --alter table users
     --owner to postgres;
 
-drop table if exists reviews;
+--drop table if exists reviews;
 create table if not exists reviews
 (
     reviews_description text,
@@ -49,7 +49,7 @@ create table if not exists reviews
 --alter table reviews
     --owner to postgres;
 
-drop table if exists orders;
+--drop table if exists orders;
 create table if not exists orders
 (
     id     integer generated always as identity (maxvalue 10000000)
@@ -64,7 +64,7 @@ create table if not exists orders
 --alter table orders
    -- owner to postgres;
 
-drop table if exists items;
+--drop table if exists items;
 create table if not exists items
 (
     order_id         integer not null

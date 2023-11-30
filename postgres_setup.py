@@ -13,6 +13,10 @@ def read_file(filename):
 
 def main():
     conn = postgres_test.create_connection()
+    script = read_file("droptablesscript.txt")
+    print(script)
+    cursor = conn.cursor()
+    cursor.execute(script)
     script = read_file("postgres_table_scripts.txt")
     print(script)
     cursor = conn.cursor()
