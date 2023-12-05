@@ -1,0 +1,5 @@
+SELECT create_distributed_table('products', 'id');
+SELECT create_distributed_table('users', 'username');
+SELECT create_distributed_table('reviews', 'product_id');
+SELECT create_distributed_table('orders', 'user');
+SELECT create_distributed_table('items', 'product_id');

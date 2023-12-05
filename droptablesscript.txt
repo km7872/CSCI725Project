@@ -1,6 +1,6 @@
-drop table items;
-drop table orders;
-drop table reviews;
-drop table products;
-drop table users;
+drop table if exists items;
+drop table if exists orders;
+drop table if exists reviews;
+drop table if exists products;
+drop table if exists users;
 commit;

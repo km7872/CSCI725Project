@@ -2,9 +2,15 @@
 
 import psycopg2
 
-host = "csci725group3postgres.postgres.database.azure.com"
-dbname = "postgres"
-user = "userpostgres@csci725group3postgres"
+# host = "csci725group3postgres.postgres.database.azure.com"
+# dbname = "postgres"
+# user = "userpostgres@csci725group3postgres"
+# password = "csci725@group3"
+# sslmode = "require"
+
+host = "c-postgres-cosmos-demo.hmzytyr5uzreih.postgres.cosmos.azure.com"
+dbname = "citus"
+user = "citus"
 password = "csci725@group3"
 sslmode = "require"
 

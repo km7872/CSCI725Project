@@ -17,11 +17,16 @@ def main():
     # print(script)
     cursor = conn.cursor()
     cursor.execute(script)
-    script = read_file("postgres_table_scripts.txt")
+    script = read_file("postgres_table_scripts_cosmos.txt")
     # print(script)
     cursor = conn.cursor()
     cursor.execute(script)
     print('Tables created')
+    script = read_file("postgres_distributed_queries.txt")
+    # print(script)
+    cursor = conn.cursor()
+    cursor.execute(script)
+    print('Tables distributed')
 
 
     # Fetch all rows from table
